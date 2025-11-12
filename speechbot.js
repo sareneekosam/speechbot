@@ -1,4 +1,4 @@
-// speechbot.js - Full UI SpeechBot with continuous listening after responses
+// speechbot.js - Full UI SpeechBot with proper listening after greeting
 
 const link = document.createElement("link");
 link.rel = "icon";
@@ -570,7 +570,7 @@ class SpeechBot {
                 this.updateButtonState();
                 this.updateSendButtonToMic(false);
 
-                // Auto-restart listening if we're supposed to be listening
+                // Auto-restart listening only if we're supposed to be listening
                 if (this.shouldBeListening && !this.isSpeaking) {
                     setTimeout(() => {
                         if (this.shouldBeListening && !this.isSpeaking) {
@@ -582,7 +582,7 @@ class SpeechBot {
 
             this.recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
-                this.shouldBeListening = false;
+                this.shouldBeListening = false; // Stop auto-restart after getting result
                 this.updateSendButtonToMic(false);
                 this.addMessage(transcript, 'user');
 
@@ -603,12 +603,14 @@ class SpeechBot {
                     errorMessage = 'Microphone access denied. Please allow microphone permissions and try again.';
                 } else if (event.error === 'no-speech') {
                     errorMessage = 'No speech detected. Please speak your question.';
-                    // Auto-restart after no speech error
-                    setTimeout(() => {
-                        if (!this.isSpeaking && this.shouldBeListening) {
-                            this.startListening();
-                        }
-                    }, 1000);
+                    // Auto-restart after no speech error only if we should be listening
+                    if (this.shouldBeListening) {
+                        setTimeout(() => {
+                            if (!this.isSpeaking && this.shouldBeListening) {
+                                this.startListening();
+                            }
+                        }, 1000);
+                    }
                 } else if (event.error === 'audio-capture') {
                     errorMessage = 'No microphone found. Please check your audio settings.';
                 } else if (event.error === 'network') {
@@ -616,6 +618,8 @@ class SpeechBot {
                 }
 
                 this.addMessage(errorMessage, 'bot');
+                // Show microphone prompt after error
+                this.showMicrophonePrompt();
             };
         } else {
             const errorMessage = 'Speech recognition is not supported in your browser. Please use Google Chrome for the best experience.';
@@ -907,23 +911,19 @@ class SpeechBot {
         if (isAnswer) {
             this.showMicrophonePrompt();
             
-            // Auto-start listening after answer
+            // DO NOT auto-start listening after answer - wait for user to click microphone
+            this.shouldBeListening = false;
+        }
+
+        // Auto-start listening after welcome message (first interaction)
+        if (this.conversationState === 'awaiting_question' && !isAnswer) {
+            console.log('Starting listening after welcome message');
             this.shouldBeListening = true;
             setTimeout(() => {
                 if (!this.isSpeaking && this.shouldBeListening) {
                     this.startListening();
                 }
             }, 1500);
-        }
-
-        // Auto-start listening after welcome message
-        if (this.conversationState === 'awaiting_question' && !isAnswer) {
-            this.shouldBeListening = true;
-            setTimeout(() => {
-                if (!this.isSpeaking && this.shouldBeListening) {
-                    this.startListening();
-                }
-            }, 1200);
         }
     }
 
@@ -1027,11 +1027,10 @@ class SpeechBot {
             this.shouldBeListening = true;
         } catch (error) {
             console.error('Failed to start recognition', error);
+            // Show microphone prompt if recognition fails
             setTimeout(() => {
-                if (!this.isSpeaking && this.shouldBeListening) {
-                    this.startListening();
-                }
-            }, 500);
+                this.showMicrophonePrompt();
+            }, 1000);
         }
     }
 
@@ -1074,21 +1073,21 @@ class SpeechBot {
                 this.addMessage(translatedMessage, 'bot');
                 this.speechQueue = [];
                 this.speakWithNaturalVoice(translatedMessage, false);
-                // Set flag to start listening after speech
+                // Set flag to start listening after welcome speech
                 this.shouldBeListeningAfterSpeech = true;
             } catch (error) {
                 console.error('Welcome translation failed:', error);
                 this.addMessage(displayMessage, 'bot');
                 this.speechQueue = [];
                 this.speakWithNaturalVoice(speakMessage, false);
-                // Set flag to start listening after speech
+                // Set flag to start listening after welcome speech
                 this.shouldBeListeningAfterSpeech = true;
             }
         } else {
             this.addMessage(displayMessage, 'bot');
             this.speechQueue = [];
             this.speakWithNaturalVoice(speakMessage, false);
-            // Set flag to start listening after speech
+            // Set flag to start listening after welcome speech
             this.shouldBeListeningAfterSpeech = true;
         }
     }
