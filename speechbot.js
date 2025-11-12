@@ -793,7 +793,7 @@ class SpeechBot {
             utterance.voice = (langKey === 'te' ? this.teluguVoice : this.englishVoice) || null;
 
             if (langKey === 'te') {
-                utterance.rate = 4.1;
+                utterance.rate = 1.1;
                 utterance.pitch = 1.0;
             } else {
                 utterance.rate = 0.95;
