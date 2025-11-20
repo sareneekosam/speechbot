@@ -1,4 +1,4 @@
-// speechbot.js - Full UI SpeechBot with proper listening after greeting
+// speechbot.js - Full UI SpeechBot with proper layout fixes
 
 const link = document.createElement("link");
 link.rel = "icon";
@@ -23,6 +23,7 @@ class SpeechBot {
         this.isHidingResponse = false;
         this.currentLanguage = 'en';
         this.conversationState = 'idle';
+        this.hasShownListeningMessage = false;
 
         // Translation API endpoints
         this.translateApiPath = '/translate';
@@ -93,7 +94,7 @@ class SpeechBot {
                 bottom: 80px;
                 right: 0;
                 width: 380px;
-                height: 450px;
+                height: 500px;
                 background: white;
                 border-radius: 15px;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
@@ -107,31 +108,118 @@ class SpeechBot {
                 display: flex;
             }
 
+            /* HEADER - FIXED LAYOUT */
             .chat-header {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
-                padding: 15px;
-                text-align: center;
-                font-weight: bold;
-                position: relative;
+                padding: 12px 15px;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
+                min-height: 50px;
+                flex-shrink: 0;
+                width: 100%;
+                box-sizing: border-box;
             }
 
-            .header-content {
+            .header-section {
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                flex: 1;
-                justify-content: center;
             }
 
+            .header-left {
+                justify-content: flex-start;
+                flex: 1;
+            }
+
+            .header-right {
+                justify-content: flex-end;
+                gap: 10px;
+            }
+
+            .assistant-title {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .assistant-text {
+                font-size: 14px;
+                font-weight: bold;
+                color: white;
+            }
+
+            .robo-icon {
+                animation: float 3s ease-in-out infinite;
+                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+                border-radius: 50%;
+            }
+
+            @keyframes float {
+                0%, 100% { transform: translateY(0px) rotate(0deg); }
+                25% { transform: translateY(-3px) rotate(1deg); }
+                50% { transform: translateY(-5px) rotate(0deg); }
+                75% { transform: translateY(-3px) rotate(-1deg); }
+            }
+
+            /* LANGUAGE SELECTOR - RIGHT SIDE */
+            .language-selector-wrapper {
+                display: flex;
+                align-items: center;
+            }
+
+            .lang-dropdown {
+                padding: 6px 10px;
+                border-radius: 12px;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                background: rgba(255, 255, 255, 0.15);
+                color: white;
+                font-size: 12px;
+                font-weight: bold;
+                backdrop-filter: blur(10px);
+                cursor: pointer;
+                min-width: 90px;
+            }
+
+            .lang-dropdown:focus {
+                outline: none;
+                border-color: rgba(255, 255, 255, 0.6);
+            }
+
+            .lang-dropdown option {
+                background: white;
+                color: #333;
+            }
+
+            /* CLOSE BUTTON */
+            .close-btn {
+                background: none;
+                border: none;
+                font-size: 20px;
+                cursor: pointer;
+                color: white;
+                padding: 0;
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+
+            .close-btn:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+            /* CHAT MESSAGES */
             .chat-messages {
                 flex: 1;
                 padding: 15px;
                 overflow-y: auto;
                 background: #f8f9fa;
+                min-height: 0;
             }
 
             .message {
@@ -159,10 +247,15 @@ class SpeechBot {
                 box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             }
 
-            .chat-input {
-                padding: 15px;
+            /* INPUT AREA */
+            .chat-input-area {
                 border-top: 1px solid #e0e0e0;
                 background: white;
+                flex-shrink: 0;
+            }
+
+            .chat-input {
+                padding: 15px;
                 display: flex;
                 gap: 10px;
                 align-items: center;
@@ -177,7 +270,7 @@ class SpeechBot {
                 font-size: 14px;
             }
 
-            .chat-input button {
+            .send-btn {
                 background: #667eea;
                 color: white;
                 border: none;
@@ -191,15 +284,134 @@ class SpeechBot {
                 transition: background 0.3s ease;
             }
 
-            .chat-input button:hover {
+            .send-btn:hover {
                 background: #5a6fd8;
             }
 
-            .chat-input button.mic-active {
+            .send-btn.mic-active {
                 background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
                 animation: pulse 1.5s infinite;
             }
 
+            /* POWERED BY TEXT - DEFINITELY VISIBLE */
+            .powered-by-tva {
+                text-align: center;
+                font-size: 11px;
+                color: #888;
+                padding: 8px 15px;
+                background: #f8f9fa;
+                border-top: 1px solid #e0e0e0;
+                font-style: italic;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+
+            .powered-by-tva span {
+                display: inline-block;
+            }
+
+            /* Voice animation for assistant button */
+            .voice-waves {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+            }
+
+            .voice-wave {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                border: 2px solid rgba(255, 255, 255, 0.6);
+                border-radius: 50%;
+                animation: voiceWave 2s linear infinite;
+            }
+
+            .voice-wave:nth-child(2) {
+                animation-delay: 0.5s;
+            }
+
+            .voice-wave:nth-child(3) {
+                animation-delay: 1s;
+            }
+
+            @keyframes voiceWave {
+                0% {
+                    width: 0;
+                    height: 0;
+                    opacity: 1;
+                }
+                100% {
+                    width: 100%;
+                    height: 100%;
+                    opacity: 0;
+                }
+            }
+
+            /* Typing indicator */
+            .typing-indicator {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                padding: 10px 15px;
+                background: white;
+                border-radius: 18px;
+                border: 1px solid #e0e0e0;
+                max-width: 120px;
+            }
+
+            .typing-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: #667eea;
+                animation: typingBounce 1.4s ease-in-out infinite;
+            }
+
+            .typing-dot:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+
+            .typing-dot:nth-child(3) {
+                animation-delay: 0.4s;
+            }
+
+            @keyframes typingBounce {
+                0%, 80%, 100% {
+                    transform: scale(0.8);
+                    opacity: 0.5;
+                }
+                40% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+
+            /* Improved scrollbar */
+            .chat-messages::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .chat-messages::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 3px;
+            }
+
+            .chat-messages::-webkit-scrollbar-thumb {
+                background: #c1c1c1;
+                border-radius: 3px;
+            }
+
+            .chat-messages::-webkit-scrollbar-thumb:hover {
+                background: #a8a8a8;
+            }
+
+            /* Prompt message */
             .prompt-message {
                 font-size: 12px;
                 color: #666;
@@ -213,11 +425,6 @@ class SpeechBot {
                 align-items: center;
                 justify-content: center;
                 gap: 8px;
-            }
-
-            .prompt-message svg {
-                width: 16px;
-                height: 16px;
             }
 
             .speechbot-loading-dots {
@@ -286,20 +493,6 @@ class SpeechBot {
                 gap: 10px;
             }
             
-            .robo-icon {
-                animation: float 3s ease-in-out infinite;
-                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-                border-radius: 50%;
-                object-fit: cover;
-            }
-            
-            @keyframes float {
-                0%, 100% { transform: translateY(0px) rotate(0deg); }
-                25% { transform: translateY(-3px) rotate(1deg); }
-                50% { transform: translateY(-5px) rotate(0deg); }
-                75% { transform: translateY(-3px) rotate(-1deg); }
-            }
-            
             .colorful-robo {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
                 background-size: 400% 400%;
@@ -311,154 +504,17 @@ class SpeechBot {
                 50% { background-position: 100% 50%; }
                 100% { background-position: 0% 50%; }
             }
-            
-            .close-btn {
-                background: none;
-                border: none;
-                font-size: 20px;
-                cursor: pointer;
-                color: white;
-                padding: 0;
-                width: 30px;
-                height: 30px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: all 0.3s ease;
-                border-radius: 50%;
-            }
-            
-            .close-btn:hover {
-                background: rgba(255, 255, 255, 0.2);
-            }
-            
-            .language-selector {
-                position: absolute;
-                top: 10px;
-                left: 15px;
-                z-index: 1001;
-            }
-            
-            .language-selector select {
-                padding: 6px 10px;
-                border-radius: 12px;
-                border: 1px solid rgba(255, 255, 255, 0.3);
-                background: rgba(255, 255, 255, 0.15);
-                color: white;
-                font-size: 12px;
-                font-weight: bold;
-                backdrop-filter: blur(10px);
-                cursor: pointer;
-            }
-            
-            .language-selector select:focus {
-                outline: none;
-                border-color: rgba(255, 255, 255, 0.6);
-            }
-            
-            .language-selector select option {
-                background: white;
-                color: #333;
-            }
 
-            /* Voice animation for assistant button */
-            .voice-waves {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                width: 100%;
-                height: 100%;
-                border-radius: 50%;
-            }
-            
-            .voice-wave {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                border: 2px solid rgba(255, 255, 255, 0.6);
-                border-radius: 50%;
-                animation: voiceWave 2s linear infinite;
-            }
-            
-            .voice-wave:nth-child(2) {
-                animation-delay: 0.5s;
-            }
-            
-            .voice-wave:nth-child(3) {
-                animation-delay: 1s;
-            }
-            
-            @keyframes voiceWave {
-                0% {
-                    width: 0;
-                    height: 0;
-                    opacity: 1;
-                }
-                100% {
-                    width: 100%;
-                    height: 100%;
-                    opacity: 0;
-                }
-            }
-
-            /* Typing indicator */
-            .typing-indicator {
-                display: flex;
-                align-items: center;
-                gap: 5px;
-                padding: 10px 15px;
-                background: white;
-                border-radius: 18px;
-                border: 1px solid #e0e0e0;
-                max-width: 120px;
-            }
-            
-            .typing-dot {
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: #667eea;
-                animation: typingBounce 1.4s ease-in-out infinite;
-            }
-            
-            .typing-dot:nth-child(2) {
-                animation-delay: 0.2s;
-            }
-            
-            .typing-dot:nth-child(3) {
-                animation-delay: 0.4s;
-            }
-            
-            @keyframes typingBounce {
-                0%, 80%, 100% {
-                    transform: scale(0.8);
-                    opacity: 0.5;
-                }
-                40% {
-                    transform: scale(1);
-                    opacity: 1;
-                }
-            }
-
-            /* Improved scrollbar */
-            .chat-messages::-webkit-scrollbar {
-                width: 6px;
-            }
-            
-            .chat-messages::-webkit-scrollbar-track {
-                background: #f1f1f1;
-                border-radius: 3px;
-            }
-            
-            .chat-messages::-webkit-scrollbar-thumb {
-                background: #c1c1c1;
-                border-radius: 3px;
-            }
-            
-            .chat-messages::-webkit-scrollbar-thumb:hover {
-                background: #a8a8a8;
+            /* Listening message styling */
+            .listening-message {
+                font-style: italic;
+                color: #666;
+                text-align: center;
+                padding: 8px;
+                background: #f0f8ff;
+                border-radius: 10px;
+                border: 1px solid #d1e7ff;
+                margin: 10px 0;
             }
         `;
         document.head.appendChild(style);
@@ -470,34 +526,56 @@ class SpeechBot {
         widget.className = 'voice-assistant';
         widget.innerHTML = `
             <div class="chat-container" id="speechbot-chat-container">
+                <!-- HEADER WITH PROPER LAYOUT -->
                 <div class="chat-header">
-                    <div class="language-selector">
-                        <select id="languageSelector">
-                            <option value="en">English</option>
-                            <option value="te">తెలుగు</option>
-                        </select>
+                    <!-- LEFT SIDE: AI Assistant -->
+                    <div class="header-section header-left">
+                        <div class="assistant-title">
+                            <img 
+                                src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" 
+                                alt="AI Assistant"
+                                class="robo-icon"
+                                width="20" 
+                                height="20"
+                            />
+                            <span class="assistant-text">AI Assistant</span>
+                        </div>
                     </div>
-                    <div class="header-content">
-                        <img 
-                            src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" 
-                            alt="AI Assistant"
-                            class="robo-icon"
-                            style="width: 24px; height: 24px;"
-                        />
-                        <span>AI Assistant</span>
+                    
+                    <!-- RIGHT SIDE: Language Selector + Close Button -->
+                    <div class="header-section header-right">
+                        <div class="language-selector-wrapper">
+                            <select id="languageSelector" class="lang-dropdown">
+                                <option value="en">English</option>
+                                <option value="te">తెలుగు</option>
+                            </select>
+                        </div>
+                        <button class="close-btn" id="close-chat" title="Close">×</button>
                     </div>
-                    <button class="close-btn" id="close-chat">×</button>
                 </div>
+                
+                <!-- CHAT MESSAGES -->
                 <div class="chat-messages" id="chat-messages"></div>
-                <div class="chat-input">
-                    <input type="text" id="text-input" placeholder="Type your message...">
-                    <button id="send-text-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                        </svg>
-                    </button>
+                
+                <!-- INPUT AREA -->
+                <div class="chat-input-area">
+                    <div class="chat-input">
+                        <input type="text" id="text-input" placeholder="Type your message...">
+                        <button id="send-text-btn" class="send-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- POWERED BY TEXT - ADDED HERE -->
+                    <div class="powered-by-tva">
+                        <span>Powered by TVA - The Voice Assistant</span>
+                    </div>
                 </div>
             </div>
+            
+            <!-- FLOATING BUTTON -->
             <button class="assistant-btn" id="assistant-btn" title="Open assistant">
                 <div class="voice-waves" id="voice-waves" style="display: none;">
                     <div class="voice-wave"></div>
@@ -561,8 +639,13 @@ class SpeechBot {
                 this.isListening = true;
                 this.updateButtonState();
                 this.updateSendButtonToMic(true);
-                const listeningMessage = "🎤 Listening... Speak your question now!";
-                this.addMessage(listeningMessage, 'bot');
+                
+                // Only show listening message once per session
+                if (!this.hasShownListeningMessage) {
+                    const listeningMessage = "🎤 Listening... Speak your question now!";
+                    this.addMessage(listeningMessage, 'bot');
+                    this.hasShownListeningMessage = true;
+                }
             };
 
             this.recognition.onend = () => {
@@ -583,6 +666,7 @@ class SpeechBot {
             this.recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
                 this.shouldBeListening = false; // Stop auto-restart after getting result
+                this.hasShownListeningMessage = false; // Reset for next session
                 this.updateSendButtonToMic(false);
                 this.addMessage(transcript, 'user');
 
@@ -594,6 +678,7 @@ class SpeechBot {
                 console.error('Speech recognition error:', event.error);
                 this.isListening = false;
                 this.shouldBeListening = false;
+                this.hasShownListeningMessage = false; // Reset on error
                 this.updateButtonState();
                 this.updateSendButtonToMic(false);
 
@@ -919,6 +1004,7 @@ class SpeechBot {
         if (this.conversationState === 'awaiting_question' && !isAnswer) {
             console.log('Starting listening after welcome message');
             this.shouldBeListening = true;
+            this.hasShownListeningMessage = false; // Reset for new listening session
             setTimeout(() => {
                 if (!this.isSpeaking && this.shouldBeListening) {
                     this.startListening();
@@ -1014,6 +1100,7 @@ class SpeechBot {
             } catch (e) { }
             this.isListening = false;
             this.shouldBeListening = false;
+            this.hasShownListeningMessage = false; // Reset when manually stopping
             this.updateButtonState();
             this.updateSendButtonToMic(false);
         }
@@ -1066,6 +1153,7 @@ class SpeechBot {
 
         // Reset hiding response flag when starting conversation
         this.isHidingResponse = false;
+        this.hasShownListeningMessage = false; // Reset for new conversation
 
         if (this.currentLanguage === 'te') {
             try {
@@ -1237,6 +1325,7 @@ class SpeechBot {
         this.conversationState = 'idle';
         this.shouldBeListening = false;
         this.shouldBeListeningAfterSpeech = false;
+        this.hasShownListeningMessage = false; // Reset when hiding chat
         this.updateSendButtonToMic(false);
 
         if (this.autoCloseTimeout) {
